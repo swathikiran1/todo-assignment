@@ -132,11 +132,9 @@ app.get("/todos/", async (request, response) => {
         isValidStatusProperty(request.query)
       ) {
         data = await db.all(getTodoQuery);
-        let todos = [];
-        for (let eachObj of data) {
-          todos.push(convertRequestObjectToResponseObject(eachObj));
-        }
-        response.send(todos);
+        response.send(
+          data.map((eachItem) => convertRequestObjectToResponseObject(eachItem))
+        );
       } else {
         if (isValidCategoryProperty(request.query) === false) {
           response.status(400);
@@ -146,9 +144,15 @@ app.get("/todos/", async (request, response) => {
           response.send("Invalid Todo Status");
         }
       }
+
       break;
+
     case hasCategoryAndPriorityProperties(request.query):
-      getTodoQuery = `
+      if (
+        isValidCategoryProperty(request.query) &&
+        isValidPriorityProperty(request.query)
+      ) {
+        getTodoQuery = `
                SELECT
                   *
                FROM
@@ -156,30 +160,23 @@ app.get("/todos/", async (request, response) => {
                WHERE
                   category = '${category}'
                   AND priority = '${priority}';`;
-      if (
-        category === "WORK" ||
-        category === "HOME" ||
-        category === "LEARNING"
-      ) {
-        if (
-          priority === "HIGH" ||
-          priority === "MEDIUM" ||
-          priority === "LOW"
-        ) {
-          data = await db.all(getTodoQuery);
-          response.send(
-            data.map((eachItem) =>
-              convertRequestObjectToResponseObject(eachItem)
-            )
-          );
+
+        data = await db.all(getTodoQuery);
+        response.send(
+          data.map((eachItem) => convertRequestObjectToResponseObject(eachItem))
+        );
+      } else {
+        if (isValidCategoryProperty(request.query) === false) {
+          response.status(400);
+          response.send("Invalid Todo Category");
         } else {
           response.status(400);
           response.send("Invalid Todo Priority");
         }
-      } else {
-        response.status(400);
-        response.send("Invalid Todo Category");
       }
+
+      break;
+
     case hasPriorityProperty(request.query):
       getTodoQuery = `
                SELECT
@@ -190,16 +187,16 @@ app.get("/todos/", async (request, response) => {
                   priority = '${priority}';`;
       if (isValidPriorityProperty(request.query)) {
         data = await db.all(getTodoQuery);
-        let todos = [];
-        for (let eachObj of data) {
-          todos.push(convertRequestObjectToResponseObject(eachObj));
-        }
-        response.send(todos);
+        response.send(
+          data.map((eachItem) => convertRequestObjectToResponseObject(eachItem))
+        );
       } else {
         response.status(400);
         response.send("Invalid Todo Priority");
       }
+
       break;
+
     case hasStatusProperty(request.query):
       getTodoQuery = `
                SELECT
@@ -208,31 +205,28 @@ app.get("/todos/", async (request, response) => {
                   todo
                WHERE
                   status = '${status}';`;
+
       if (isValidStatusProperty(request.query)) {
         data = await db.all(getTodoQuery);
-        let todos = [];
-        for (let eachObj of data) {
-          todos.push(convertRequestObjectToResponseObject(eachObj));
-        }
-        response.send(todos);
+        response.send(
+          data.map((eachItem) => convertRequestObjectToResponseObject(eachItem))
+        );
       } else {
         response.status(400);
         response.send("Invalid Todo Status");
       }
+
       break;
+
     case hasCategoryProperty(request.query):
-      getTodoQuery = `
+      if (isValidCategoryProperty(request.query)) {
+        getTodoQuery = `
                SELECT
                   *
                FROM
                   todo
                WHERE
                   category = '${category}';`;
-      if (
-        category === "WORK" ||
-        category === "HOME" ||
-        category === "LEARNING"
-      ) {
         data = await db.all(getTodoQuery);
         response.send(
           data.map((eachItem) => convertRequestObjectToResponseObject(eachItem))
@@ -241,7 +235,9 @@ app.get("/todos/", async (request, response) => {
         response.status(400);
         response.send("Invalid Todo Category");
       }
+
       break;
+
     default:
       getTodoQuery = `
                SELECT
@@ -252,11 +248,10 @@ app.get("/todos/", async (request, response) => {
                   todo LIKE '%${search_q}%';`;
 
       data = await db.all(getTodoQuery);
-      let todos = [];
-      for (let eachObj of data) {
-        todos.push(convertRequestObjectToResponseObject(eachObj));
-      }
-      response.send(todos);
+      response.send(
+        data.map((eachItem) => convertRequestObjectToResponseObject(eachItem))
+      );
+
       break;
   }
 });
